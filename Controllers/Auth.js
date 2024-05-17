@@ -1,27 +1,18 @@
 const bcrypt = require("bcrypt");
 const { User } = require("../Models/User");
 const jwt = require("jsonwebtoken");
+const Joi = require("joi");
+const { registerSchema, loginSchema } = require("../Validations/Auth");
 
 const Register = async (req, res) => {
   try {
-    const { name, email, password, phone, address, role, status } = req.body;
-
-    switch (true) {
-      case !name:
-        return res.send({ error: "Name is Required" });
-
-      case !email:
-        return res.send({ message: "Email is Required" });
-
-      case !password:
-        return res.send({ message: "Password is Required" });
-
-      case !phone:
-        return res.send({ message: "Phone no is Required" });
-
-      case !address:
-        return res.send({ message: "Address is Required" });
+    const { error, value } = registerSchema.validate(req.body);
+    if (error) {
+      return res.status(400).send({ error: error.details[0].message });
     }
+
+    const { name, email, password, phone, address, hospitalName } = value;
+
     const existinguser = await User.findOne({ email });
 
     if (existinguser) {
@@ -38,6 +29,7 @@ const Register = async (req, res) => {
       password: hashPassword,
       address: address,
       phone: phone,
+      hospitalName: hospitalName,
     });
     await userData.save();
     res.status(200).send({
@@ -57,12 +49,9 @@ const Register = async (req, res) => {
 
 const Login = async (req, res) => {
   try {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.send({ message: "Email and password is Required" });
-    }
-
+    const { error, value } = loginSchema.validate(req.body);
+    if (error) return res.status(400).send({ error: error.message });
+    const { email, password } = value;
     let user = await User.findOne({ email: email });
 
     if (!user) {
@@ -107,6 +96,7 @@ const Login = async (req, res) => {
         phone: user.phone,
         address: user.address,
         role: user.role,
+        hospitalName: user.hospitalName,
       },
       token,
     });

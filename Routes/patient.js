@@ -14,3 +14,5 @@ patientRouter.get("/getPatient/:id", issignin, getPatient);
 patientRouter.post("/create", issignin, addPatient);
 patientRouter.put("/update/:id", issignin, updatePatient);
 patientRouter.delete("/delete/:id", issignin, deletePatient);
+
+module.exports = patientRouter;

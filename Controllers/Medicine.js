@@ -1,4 +1,5 @@
 const { Medicine } = require("../Models/Medicines");
+const { addMedicineSchema } = require("../Validations/Medicine");
 
 const getMedicines = async (req, res) => {
   try {
@@ -6,6 +7,7 @@ const getMedicines = async (req, res) => {
     res.status(200).send({
       success: true,
       msg: "getAllMedicines",
+      count: medicinesData.length,
       results: medicinesData,
     });
   } catch (error) {
@@ -20,10 +22,10 @@ const getMedicines = async (req, res) => {
 
 const addMedicine = async (req, res) => {
   try {
-    const { name, medicineType, price } = req.body;
-    if (!name || !medicineType || !price) {
-      return res.send("please fill the all");
-    }
+    const { error, value } = addMedicineSchema.validate(req.body);
+    if (error) return res.status(400).send({ error: error.message });
+    const { name, medicineType, drug, price } = value;
+
     const add = new Medicine({
       ...req.body,
     });
@@ -43,16 +45,16 @@ const addMedicine = async (req, res) => {
 };
 const updateMedicine = async (req, res) => {
   try {
-    const { name, medicineType, price } = req.body;
-    if (!name || !medicineType || !price) {
-      return res.send("please fill the all");
-    }
+    const { error, value } = addMedicineSchema.validate(req.body);
+    if (error) return res.status(400).send({ error: error.message });
+    const { name, medicineType, drug, price } = value;
     const updateData = await Medicine.findByIdAndUpdate(
       req.params.id,
       {
         $set: {
           name,
           medicineType,
+          drug: drug,
           price,
         },
       },
@@ -75,18 +77,13 @@ const updateMedicine = async (req, res) => {
 
 const deleteMedicine = async (req, res) => {
   try {
-    const deleteData = await Medicine.findByIdAndDelete(req.params.id);
-    res.status(200).send({
-      success: true,
-      msg: "deleted successfully",
-    });
+    await Medicine.findByIdAndDelete(req.params.id);
+    res.status(200).send({ success: true, msg: "deleted successfully" });
   } catch (error) {
     console.log(error);
-    return res.status(500).send({
-      success: false,
-      msg: "something went wrong",
-      error,
-    });
+    return res
+      .status(500)
+      .send({ success: false, msg: "something went wrong", error });
   }
 };
 const getMedicine = async (req, res) => {

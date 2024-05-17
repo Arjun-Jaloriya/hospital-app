@@ -1,9 +1,11 @@
 const mongoose = require("mongoose");
+
 const medicinesSchema = new mongoose.Schema(
   {
-    name: { type: String },
-    madicineType: { type: String },
-    price: { type: Number },
+    name: { type: String, required: true },
+    medicineType: { type: String, required: true },
+    drug: [{ name: { type: String, required: true } }],
+    price: { type: Number, required: true },
   },
   {
     timestamps: true,

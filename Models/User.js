@@ -15,6 +15,7 @@ const Userschema = new mongoose.Schema(
       type: Number,
       default: 1,
     },
+    hospitalName: { type: String, required: true },
   },
   { timestamps: true }
 );

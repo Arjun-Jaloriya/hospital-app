@@ -1,4 +1,5 @@
 const { Patient } = require("../Models/Patient");
+const { patientSchema } = require("../Validations/Patient");
 
 const getPatients = async (req, res) => {
   try {
@@ -6,6 +7,7 @@ const getPatients = async (req, res) => {
     res.status(200).send({
       success: true,
       msg: "getAllPatients",
+      count: getData.length,
       results: getData,
     });
   } catch (error) {
@@ -36,10 +38,9 @@ const getPatient = async (req, res) => {
 };
 const addPatient = async (req, res) => {
   try {
-    const { name, phone, address, healthDetails, healthIssues } = req.body;
-    if (!name || !phone || !address || healthIssues || healthDetails) {
-      return res.send("all fields are reqired");
-    }
+    // const { name, phone, address, healthDetails, healthIssues } = req.body;
+    const { error } = patientSchema.validate(req.body);
+    if (error) return res.status(400).send(error.message);
     const addData = new Patient({
       ...req.body,
     });
@@ -60,20 +61,24 @@ const addPatient = async (req, res) => {
 
 const updatePatient = async (req, res) => {
   try {
-    const { name, phone, address, healthDetails, healthIssues } = req.body;
-    if (!name || !phone || !address || healthIssues || healthDetails) {
-      return res.send("all fields are reqired");
-    }
+    const { error } = patientSchema.validate(req.body);
+    if (error) return res.status(400).send(error.message);
+
+    const { name, address, phone, healthDetails, healthIssues } = req.body;
+
     const updateData = await Patient.findByIdAndUpdate(
       req.params.id,
       {
-        $push: { healthDetails: healthDetails, healthIssues: healthIssues },
+        $push: {
+          healthDetails: healthDetails,
+          healthIssues: healthIssues,
+        },
       },
       { new: true, useFindAndModify: false }
     );
     res.status(200).send({
       success: true,
-      msg: "update successfully",
+      msg: "Updated successfully",
       results: updateData,
     });
   } catch (error) {
@@ -87,7 +92,7 @@ const updatePatient = async (req, res) => {
 };
 const deletePatient = async (req, res) => {
   try {
-    const deleteData = await Patient.findByIdAndDelete(req.params.id);
+    await Patient.findByIdAndDelete(req.params.id);
     res.status(200).send({
       success: true,
       msg: "deleted successfully",

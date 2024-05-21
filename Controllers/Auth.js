@@ -11,7 +11,7 @@ const Register = async (req, res) => {
       return res.status(400).send({ error: error.details[0].message });
     }
 
-    const { name, email, password, phone, address, hospitalName } = value;
+    const { name, email, password, phone, address } = value;
 
     const existinguser = await User.findOne({ email });
 
@@ -29,7 +29,6 @@ const Register = async (req, res) => {
       password: hashPassword,
       address: address,
       phone: phone,
-      hospitalName: hospitalName,
     });
     await userData.save();
     res.status(200).send({
@@ -80,11 +79,12 @@ const Login = async (req, res) => {
       expiresIn: "7d",
     });
 
-    user.token = await User.findByIdAndUpdate(
-      user._id,
-      { token: token },
-      { new: true }
-    );
+    await User.findByIdAndUpdate(user._id, { token: token });
+
+    user = await User.findById(user._id)
+      .populate("receptionId")
+      .populate("pharmacyId")
+      .populate("hospitalId");
 
     res.status(200).send({
       success: true,
@@ -96,7 +96,10 @@ const Login = async (req, res) => {
         phone: user.phone,
         address: user.address,
         role: user.role,
-        hospitalName: user.hospitalName,
+        status: user.status,
+        hospitalId: user.hospitalId,
+        receptionId: user.receptionId,
+        pharmacyId: user.pharmacyId,
       },
       token,
     });

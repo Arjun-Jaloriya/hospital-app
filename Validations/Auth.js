@@ -8,7 +8,6 @@ const registerSchema = Joi.object({
     .pattern(/^[0-9]{10}$/)
     .required(),
   address: Joi.string().required(),
-  hospitalName: Joi.string().required(),
 });
 
 const loginSchema = Joi.object({

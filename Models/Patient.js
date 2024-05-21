@@ -5,6 +5,7 @@ const PatientSchema = new mongoose.Schema(
     name: { type: String, required: true },
     phone: { type: Number, required: true, unique: true },
     address: { type: String, required: true },
+    hospitalId: { type: mongoose.ObjectId, ref: "Hospital" },
     healthDetails: [
       {
         age: { type: Number, required: true },

@@ -3,11 +3,26 @@ const { patientSchema } = require("../Validations/Patient");
 
 const getPatients = async (req, res) => {
   try {
-    const getData = await Patient.find({});
+    const search = req.query.search ? req.query.search : "";
+    const page = req.query.page ? req.query.page : 1;
+    const perpage = req.query.perpage ? req.query.perpage : 5;
+    const id = req.user.hospitalId;
+    const count = await Patient.countDocuments({
+      hospitalId: id,
+      name: { $regex: search, $options: "i" },
+    });
+
+    const getData = await Patient.find({
+      hospitalId: id,
+      name: { $regex: search, $options: "i" },
+    })
+      .skip((page - 1) * perpage)
+      .limit(perpage)
+      .sort({ createdAt: -1 });
     res.status(200).send({
       success: true,
       msg: "getAllPatients",
-      count: getData.length,
+      count: count,
       results: getData,
     });
   } catch (error) {
@@ -38,16 +53,16 @@ const getPatient = async (req, res) => {
 };
 const addPatient = async (req, res) => {
   try {
-    // const { name, phone, address, healthDetails, healthIssues } = req.body;
-    const { error } = patientSchema.validate(req.body);
+    const { error, value } = patientSchema.validate(req.body);
     if (error) return res.status(400).send(error.message);
     const addData = new Patient({
-      ...req.body,
+      ...value,
+      hospitalId: req.user.hospitalId,
     });
     await addData.save();
     res.status(200).send({
       success: true,
-      msg: "added successfully",
+      msg: "Patient Added Successfull",
     });
   } catch (error) {
     console.log(error);
@@ -61,10 +76,10 @@ const addPatient = async (req, res) => {
 
 const updatePatient = async (req, res) => {
   try {
-    const { error } = patientSchema.validate(req.body);
+    const { error ,value} = patientSchema.validate(req.body);
     if (error) return res.status(400).send(error.message);
 
-    const { name, address, phone, healthDetails, healthIssues } = req.body;
+    const { name, address, phone, healthDetails, healthIssues } = value;
 
     const updateData = await Patient.findByIdAndUpdate(
       req.params.id,

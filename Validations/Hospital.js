@@ -1,6 +1,8 @@
 const Joi = require("joi");
 
-const registerSchema = Joi.object({
+const objectIdPattern = /^[0-9a-fA-F]{24}$/;
+
+const addHospitalSchema = Joi.object({
   name: Joi.string().min(3).max(30).required(),
   email: Joi.string().email().required(),
   password: Joi.string().min(6).required(),
@@ -8,10 +10,9 @@ const registerSchema = Joi.object({
     .pattern(/^[0-9]{10}$/)
     .required(),
   address: Joi.string().required(),
+  subscriptionId: Joi.string().pattern(objectIdPattern).required().messages({
+    "string.pattern.base": "Invalid ID format",
+  }),
 });
 
-const loginSchema = Joi.object({
-  email: Joi.string().email().required(),
-  password: Joi.string().min(6).required(),
-});
-module.exports = { registerSchema, loginSchema };
+module.exports = { addHospitalSchema };

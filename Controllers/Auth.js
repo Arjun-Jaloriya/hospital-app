@@ -3,6 +3,8 @@ const { User } = require("../Models/User");
 const jwt = require("jsonwebtoken");
 const Joi = require("joi");
 const { registerSchema, loginSchema } = require("../Validations/Auth");
+const { Hospital } = require("../Models/Hospital");
+const moment = require("moment");
 
 const Register = async (req, res) => {
   try {
@@ -50,68 +52,77 @@ const Login = async (req, res) => {
   try {
     const { error, value } = loginSchema.validate(req.body);
     if (error) return res.status(400).send({ error: error.message });
-    const { email, password } = value;
-    let user = await User.findOne({ email: email });
 
+    const { email, password } = value;
+
+    let user = await User.findOne({ email });
     if (!user) {
       return res.status(404).send({
         success: false,
-        msg: "email is not registred",
+        msg: "Email is not registered",
       });
     }
 
-    const matchpass = await bcrypt.compare(password, user.password);
-
-    if (!matchpass) {
+    const matchPass = await bcrypt.compare(password, user.password);
+    if (!matchPass) {
       return res.status(404).send({
         success: false,
-        msg: "invalid email or password",
-      });
-    }
-    if (!user.status == 1) {
-      return res.status(404).send({
-        success: false,
-        msg: "sorry you cannot login",
+        msg: "Invalid email or password",
       });
     }
 
-    const token = await jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {
+    if (user.status !== 1) {
+      return res.status(403).send({
+        success: false,
+        msg: "Sorry, you cannot login",
+      });
+    }
+
+    const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "7d",
     });
 
-    await User.findByIdAndUpdate(user._id, { token: token });
+    await User.findByIdAndUpdate(user._id, { token });
 
-    user = await User.findById(user._id)
-      .populate("receptionId")
-      .populate("pharmacyId")
-      .populate("hospitalId");
+    user = await User.findById(user._id);
 
-    res.status(200).send({
-      success: true,
-      msg: `${user.name}-you are successfully login`,
-      user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        address: user.address,
-        role: user.role,
-        status: user.status,
-        hospitalId: user.hospitalId,
-        receptionId: user.receptionId,
-        pharmacyId: user.pharmacyId,
-      },
-      token,
-    });
+    if (user.role !== "superAdmin") {
+      const hospitalData = await Hospital.findById(user.hospitalId);
+      const endDate = moment(hospitalData.endDate).endOf("day").toDate();
+      const todayDate = moment().startOf("day").toDate();
+      if (todayDate > endDate) {
+        return res.status(401).send({
+          success: false,
+          msg: "Your subscription has expired",
+        });
+      }
+      res.status(200).send({
+        success: true,
+        msg: "Login successful",
+        results: {
+          hospitalName: hospitalData.name,
+          user,
+        },
+      });
+    } else {
+      res.status(200).send({
+        success: true,
+        msg: "Login successful",
+        results: user,
+      });
+    }
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return res.status(500).send({
       success: false,
-      msg: "error in login",
+      msg: "Error in login",
       error,
     });
   }
 };
+
+module.exports = { Login };
+
 const profileToken = async (req, res) => {
   try {
     const token = req.headers.authorization; // Extract token from Authorization header

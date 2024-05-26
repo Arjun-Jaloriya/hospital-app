@@ -1,12 +1,12 @@
 const bcrypt = require("bcrypt");
 const moment = require("moment");
-const { Reception } = require("../Models/Reception");
-const { addReceptionSchema } = require("../Validations/Reception");
+const { addPharmacySchema } = require("../Validations/Pharmacy");
+const { Pharmacy } = require("../Models/Pharmacy");
 const { User } = require("../Models/User");
 
-const addReception = async (req, res) => {
+const addPharmacy = async (req, res) => {
   try {
-    const { error, value } = addReceptionSchema.validate(req.body);
+    const { error, value } = addPharmacySchema.validate(req.body);
     if (error) return res.send({ error: error.message });
     const { name, email, password, phone, address } = value;
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -21,7 +21,7 @@ const addReception = async (req, res) => {
     if (existingPhone) {
       return res.status(400).send("Phone No already added");
     }
-    const addDataForReception = new Reception({
+    const addDataForPharmacy = new Pharmacy({
       name: name,
       email: email,
       password: hashedPassword,
@@ -29,7 +29,7 @@ const addReception = async (req, res) => {
       address: address,
       hospitalId: hospitalData.hospitalId,
     });
-    await addDataForReception.save();
+    await addDataForPharmacy.save();
 
     const addData = new User({
       name: name,
@@ -37,14 +37,14 @@ const addReception = async (req, res) => {
       password: hashedPassword,
       phone: phone,
       address: address,
-      role:"reception",
+      role: "pharmacy",
       hospitalId: hospitalData.hospitalId,
-      receptionId: addDataForReception._id,
+      pharmacyId: addDataForPharmacy._id,
     });
     await addData.save();
     res.status(201).send({
       success: true,
-      msg: "Reception Created Successfull",
+      msg: "Pharmacy created successfull",
     });
   } catch (error) {
     console.log(error);
@@ -56,16 +56,16 @@ const addReception = async (req, res) => {
   }
 };
 
-const getReceptions = async (req, res) => {
+const getPharmacies = async (req, res) => {
   try {
-    const getReceptionsData = await Reception.find({
+    const getPharmaciesData = await Pharmacy.find({
       hospitalId: req.user.hospitalId,
     });
     res.status(200).send({
       success: true,
       msg: "Reception fetched",
-      count: getReceptionsData.length,
-      results: getReceptionsData,
+      count: getPharmaciesData.length,
+      results: getPharmaciesData,
     });
   } catch (error) {
     console.log(error);
@@ -76,14 +76,21 @@ const getReceptions = async (req, res) => {
     });
   }
 };
-const deleteReception = async (req, res) => {
-  await Reception.findByIdAndDelete(req.params.id);
-  await User.findOneAndDelete({
-    receptionId: req.params.id,
-  });
-  res.status(200).send({
-    success: true,
-    msg: "Reception deleted",
-  });
+const deletePharmacy = async (req, res) => {
+  try {
+    await Pharmacy.findByIdAndDelete(req.params.id);
+    await User.findOneAndDelete({ pharmacyId: req.params.id });
+    res.status(200).send({
+      success: true,
+      msg: "Pharmacy deleted",
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).send({
+      success: false,
+      msg: "Something Went Wrong",
+      error,
+    });
+  }
 };
-module.exports = { addReception, getReceptions, deleteReception };
+module.exports = { addPharmacy, getPharmacies, deletePharmacy };

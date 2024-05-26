@@ -3,11 +3,20 @@ const { addMedicineSchema } = require("../Validations/Medicine");
 
 const getMedicines = async (req, res) => {
   try {
-    const medicinesData = await Medicine.find({});
+    const search = req.query.search ? req.query.search : "";
+    const perpage = req.query.perpage ? req.query.perpage : 5;
+    const page = req.query.page ? req.query.page : 1;
+    const count = await Medicine.find({
+      $or: [{ name: { $regex: search, $options: "i" } }],
+    });
+    const medicinesData = await Medicine.find({})
+      .skip((page - 1) * perpage)
+      .limit(perpage)
+      .sort({ createdAt: -1 });
     res.status(200).send({
       success: true,
       msg: "getAllMedicines",
-      count: medicinesData.length,
+      count: count.length,
       results: medicinesData,
     });
   } catch (error) {

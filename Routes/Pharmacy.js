@@ -1,10 +1,15 @@
 const express = require("express");
 const { issignin } = require("../Middleware/Auth");
-const { addReception } = require("../Controllers/Reception");
+const {
+  addPharmacy,
+  getPharmacies,
+  deletePharmacy,
+} = require("../Controllers/Pharmacy");
+
 const pharmacyRouter = express.Router();
 
-pharmacyRouter.post("/add", issignin, addReception);
-pharmacyRouter.get("/getPharmacy", issignin, getReception);
-pharmacyRouter.delete("/delete", issignin, deleteReception);
+pharmacyRouter.post("/add", issignin, addPharmacy);
+pharmacyRouter.get("/getPharmacies", issignin, getPharmacies);
+pharmacyRouter.delete("/delete/:id", issignin, deletePharmacy);
 
 module.exports = pharmacyRouter;

@@ -15,6 +15,7 @@ const hospitalRouter = require("./Routes/Hospital");
 const receptionRouter = require("./Routes/Reception");
 const pharmacyRouter = require("./Routes/Pharmacy");
 const subcriptionRouter = require("./Routes/Subscription");
+const appointmentRouter = require("./Routes/Appointment");
 
 //middleware
 app.use(express.json());
@@ -28,6 +29,7 @@ app.use("/api/hospital", hospitalRouter);
 app.use("/api/reception", receptionRouter);
 app.use("/api/pharmacy", pharmacyRouter);
 app.use("/api/subscription", subcriptionRouter);
+app.use("/api/appointment",appointmentRouter);
 
 app.listen(PORT, () => {
   console.log(`app is live at PORT ${PORT}`);

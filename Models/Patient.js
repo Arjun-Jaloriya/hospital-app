@@ -2,31 +2,12 @@ const mongoose = require("mongoose");
 
 const PatientSchema = new mongoose.Schema(
   {
+    PNO: { type: String,required: true },
     name: { type: String, required: true },
+    gender: { type: String, enum: ["MALE", "FEMALE", "OTHER"] },
     phone: { type: Number, required: true },
     address: { type: String, required: true },
     hospitalId: { type: mongoose.ObjectId, ref: "Hospital" },
-    healthDetails: [
-      {
-        age: { type: Number, required: true },
-        weight: { type: Number, required: false },
-        bp: { type: Number },
-        date: { type: Date, default: new Date() },
-      },
-    ],
-    healthIssues: [
-      {
-        description: { type: {} },
-        prescription: [
-          {
-            medicines: { type: String },
-            dose: { type: {} },
-            description: { type: {} },
-            date: { type: Date, default: new Date() },
-          },
-        ],
-      },
-    ],
   },
   { timestamps: true }
 );

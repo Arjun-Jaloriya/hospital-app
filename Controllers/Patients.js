@@ -9,12 +9,18 @@ const getPatients = async (req, res) => {
     const id = req.user.hospitalId;
     const count = await Patient.countDocuments({
       hospitalId: id,
-      name: { $regex: search, $options: "i" },
+      $or: [
+        { name: { $regex: search, $options: "i" } },
+        { PNO: { $regex: search, $options: "i" } },
+      ],
     });
 
     const getData = await Patient.find({
       hospitalId: id,
-      name: { $regex: search, $options: "i" },
+      $or: [
+        { name: { $regex: search, $options: "i" } },
+        { PNO: { $regex: search, $options: "i" } },
+      ],
     })
       .skip((page - 1) * perpage)
       .limit(perpage)
@@ -55,8 +61,23 @@ const addPatient = async (req, res) => {
   try {
     const { error, value } = patientSchema.validate(req.body);
     if (error) return res.status(400).send(error.message);
+
+    const generatePNONumber = async () => {
+      const lastPNO = await Patient.findOne().sort({ createdAt: -1 });
+      let nextPNONumber;
+      if (lastPNO && lastPNO.PNO) {
+        const lastPNONumber = parseInt(lastPNO.PNO.replace("P", ""), 10);
+        const nextPNONumberInt = lastPNONumber + 1;
+        nextPNONumber = "P" + nextPNONumberInt.toString().padStart(2, "0");
+      } else {
+        nextPNONumber = "P01";
+      }
+      return nextPNONumber;
+    };
+    const PNONumber = await generatePNONumber();
     const addData = new Patient({
       ...value,
+      PNO: PNONumber,
       hospitalId: req.user.hospitalId,
     });
     await addData.save();
@@ -76,7 +97,7 @@ const addPatient = async (req, res) => {
 
 const updatePatient = async (req, res) => {
   try {
-    const { error ,value} = patientSchema.validate(req.body);
+    const { error, value } = patientSchema.validate(req.body);
     if (error) return res.status(400).send(error.message);
 
     const { name, address, phone, healthDetails, healthIssues } = value;

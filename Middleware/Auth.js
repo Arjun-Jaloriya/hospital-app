@@ -12,10 +12,24 @@ const issignin = async (req, res, next) => {
       req.user = await User.findOne({ _id: verifyuser._id });
       next();
     } else {
-      return res.send("please login");
+      return res.status(404).send({
+        success: false,
+        msg: "please login",
+      });
     }
   } catch (error) {
-    console.log(error);
+    if (error instanceof jwt.TokenExpiredError) {
+      return res.status(401).send({
+        success: false,
+        msg: "Token has expired",
+      });
+    }
+    console.error(error);
+    return res.status(500).send({
+      success: false,
+      msg: "Something went wrong",
+      error,
+    });
   }
 };
 

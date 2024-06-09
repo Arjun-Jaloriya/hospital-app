@@ -135,7 +135,7 @@ const profileToken = async (req, res) => {
     res.status(200).send({
       success: true,
       msg: "You have a valid token",
-      user: req.user,
+      results: req.user,
     });
   } catch (error) {
     console.log(error);

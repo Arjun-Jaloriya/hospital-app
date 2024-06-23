@@ -28,7 +28,7 @@ const getSubscriptions = async (req, res) => {
     res.status(200).send({
       success: true,
       msg: "Subscription fetched",
-      count:getData.length,
+      count: getData.length,
       results: getData,
     });
   } catch (error) {
@@ -41,7 +41,7 @@ const getSubscriptions = async (req, res) => {
   }
 };
 
-const getSubscription = async(req,res)=>{
+const getSubscription = async (req, res) => {
   try {
     const getData = await Subscription.findById(req.params.id);
     res.status(200).send({
@@ -57,19 +57,23 @@ const getSubscription = async(req,res)=>{
       error,
     });
   }
-}
+};
 
 const updateSubscription = async (req, res) => {
   try {
     const { error, value } = addSubscriptionSchema.validate(req.body);
     if (error) return res.send({ error: error.message });
     const { name, month } = value;
-    const updateData = await Subscription.findByIdAndUpdate(req.params.id, {
-      $set: {
-        name: name,
-        month: month,
+    const updateData = await Subscription.findByIdAndUpdate(
+      req.params.id,
+      {
+        $set: {
+          name: name,
+          month: month,
+        },
       },
-    });
+      { new: true }
+    );
     res.status(200).send({
       success: true,
       msg: "Subscription updated",
@@ -84,4 +88,27 @@ const updateSubscription = async (req, res) => {
     });
   }
 };
-module.exports = { addSubscription, getSubscriptions, updateSubscription ,getSubscription};
+
+const deleteSubscription = async (req, res) => {
+  try {
+    await Subscription.findByIdAndDelete(req.params.id);
+    res.status(200).send({
+      success: true,
+      msg: "Subscription deleted",
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).send({
+      success: false,
+      msg: "Something Went Wrong",
+      error,
+    });
+  }
+};
+module.exports = {
+  addSubscription,
+  getSubscriptions,
+  updateSubscription,
+  getSubscription,
+  deleteSubscription,
+};
